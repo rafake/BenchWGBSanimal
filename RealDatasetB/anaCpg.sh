@@ -1,16 +1,11 @@
-#!/usr/bin/env bash
-# Configurable local paths; override via env vars if needed.
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-indexDir="${INDEX_DIR:-${REPO_DIR}/index}"
-resultDir="${RESULT_DIR:-${REPO_DIR}/result/realRes}"
-script="${SCRIPT_HELPER_DIR:-${SCRIPT_DIR}}"
-annoFilePath="${ANNO_DIR:-${REPO_DIR}/annotation}"
-PYTHON_BIN="${PYTHON_BIN:-python3}"
-
+#!/bin/sh
+indexDir=../index
+resultDir=../result/realRes
+script=../my_script/realRes
+annoFilePath=../annotation
 
 species=human
-${PYTHON_BIN} ${script}/CGIRegionDivision.py \
+python ${script}/CGIRegionDivision.py \
 	-i ${annoFilePath}/${species}/cpgIslandExtUnmasked.txt \
 	-o ${annoFilePath}/${species}/CGIRegionDivision.bed \
 	-s hg38.chrom.sizes.txt
@@ -25,7 +20,7 @@ depth=10
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/cpgAnaRes/depth${depth}_${sample}/
-	${PYTHON_BIN} ${script}/conAndDisCpG_five.py \
+	python ${script}/conAndDisCpG_five.py \
 		-a ${resultDir}/${species}/bismarkbwt2_${sample}_CpG.bedGraph \
 		-b ${resultDir}/${species}/bsmap_${sample}_CpG.bedGraph \
 		-c ${resultDir}/${species}/bwameth_${sample}_CpG.bedGraph \
@@ -41,7 +36,7 @@ done
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/cpgAnaRes/depth${depth}_${sample}/
-	${PYTHON_BIN} ${script}/conAndDisCpG_four.py \
+	python ${script}/conAndDisCpG_four.py \
 		-a ${resultDir}/${species}/bismarkbwt2_${sample}_CpG.bedGraph \
 		-b ${resultDir}/${species}/bsmap_${sample}_CpG.bedGraph \
 		-c ${resultDir}/${species}/bwameth_${sample}_CpG.bedGraph \
@@ -55,7 +50,7 @@ done
 
 
 species=cattle
-${PYTHON_BIN} ${script}/CGIRegionDivision.py \
+python ${script}/CGIRegionDivision.py \
 	-i ${annoFilePath}/${species}/cpgIslandExtUnmasked.txt \
 	-o ${annoFilePath}/${species}/CGIRegionDivision.bed \
 	-s bosTau9.chrom.sizes.txt
@@ -71,7 +66,7 @@ depth=10
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/cpgAnaRes/depth${depth}_${sample}/
-	${PYTHON_BIN} ${script}/conAndDisCpG_five.py \
+	python ${script}/conAndDisCpG_five.py \
 		-a ${resultDir}/${species}/bismarkbwt2_${sample}_CpG.bedGraph \
 		-b ${resultDir}/${species}/bsmap_${sample}_CpG.bedGraph \
 		-c ${resultDir}/${species}/bwameth_${sample}_CpG.bedGraph \
@@ -87,7 +82,7 @@ done
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/cpgAnaRes/depth${depth}_${sample}/
-	${PYTHON_BIN} ${script}/conAndDisCpG_four.py \
+	python ${script}/conAndDisCpG_four.py \
 		-a ${resultDir}/${species}/bismarkbwt2_${sample}_CpG.bedGraph \
 		-b ${resultDir}/${species}/bsmap_${sample}_CpG.bedGraph \
 		-c ${resultDir}/${species}/bwameth_${sample}_CpG.bedGraph \
@@ -100,7 +95,7 @@ do
 done
 
 species=pig
-${PYTHON_BIN} ${script}/CGIRegionDivision.py \
+python ${script}/CGIRegionDivision.py \
 	-i ${annoFilePath}/${species}/cpgIslandExtUnmasked.txt \
 	-o ${annoFilePath}/${species}/CGIRegionDivision.bed \
 	-s susScr11.chrom.sizes.txt
@@ -116,7 +111,7 @@ depth=10
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/cpgAnaRes/depth${depth}_${sample}/
-	${PYTHON_BIN} ${script}/conAndDisCpG_five.py \
+	python ${script}/conAndDisCpG_five.py \
 		-a ${resultDir}/${species}/bismarkbwt2_${sample}_CpG.bedGraph \
 		-b ${resultDir}/${species}/bsmap_${sample}_CpG.bedGraph \
 		-c ${resultDir}/${species}/bwameth_${sample}_CpG.bedGraph \
@@ -132,7 +127,7 @@ done
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/cpgAnaRes/depth${depth}_${sample}/
-	${PYTHON_BIN} ${script}/conAndDisCpG_four.py \
+	python ${script}/conAndDisCpG_four.py \
 		-a ${resultDir}/${species}/bismarkbwt2_${sample}_CpG.bedGraph \
 		-b ${resultDir}/${species}/bsmap_${sample}_CpG.bedGraph \
 		-c ${resultDir}/${species}/bwameth_${sample}_CpG.bedGraph \

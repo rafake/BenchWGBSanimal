@@ -1,17 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-# Configurable local paths; override via env vars if needed.
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-indexDir="${INDEX_DIR:-${REPO_DIR}/index}"
-simudataDir="${SIM_DATA_DIR:-${REPO_DIR}/data/simudate/depth5}"
-softDir="${SOFT_DIR:-${REPO_DIR}/soft}"
-
+indexDir=../index
+simudataDir=../data/simudate/depth5
+softDir=../soft
 
 speciesList=(human cattle pig)
 readNumList=(53488102 41698540 41698540)
 
-for i in "${!speciesList[@]}"
+for i in $(seq 0 3)
 do
 	ERRORRATE=(0 1)
 	num=(1 2 3)

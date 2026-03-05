@@ -1,10 +1,6 @@
-#!/usr/bin/env bash
-# Configurable local paths; override via env vars if needed.
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-soft="${SOFT_DIR:-${REPO_DIR}/soft}"
-realDataDir="${DATA_DIR:-${REPO_DIR}/data}"
-
+#!/bin/sh
+soft=../soft
+realDataDir=../data
 
 species=human
 sampleList=(SRR6818517 SRR6373926 SRR6373932)

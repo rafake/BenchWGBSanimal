@@ -2,17 +2,6 @@ library(data.table)
 library(DSS)
 require(bsseq)
 
-# Configurable local result root. Defaults to repository layout.
-baseResultDir <- Sys.getenv("RESULT_DIR", unset = "../result/realRes")
-speciesDir <- function(speciesName) {
-  preferred <- file.path(baseResultDir, speciesName)
-  legacy <- file.path(baseResultDir, paste0(speciesName, "2"))
-  if (dir.exists(preferred)) {
-    return(preferred)
-  }
-  legacy
-}
-
 dmAnalysis <- function(file1.1,file1.2,file1.3,file2.1,file2.2,file2.3,dmlResFileName,dmrResFileName){
   dat1.1 <- fread(file1.1, header=T,stringsAsFactors = FALSE)
   dat1.2 <- fread(file1.2, header=T,stringsAsFactors = FALSE)
@@ -29,7 +18,7 @@ dmAnalysis <- function(file1.1,file1.2,file1.3,file2.1,file2.2,file2.3,dmlResFil
 }
 
 ## human: Differential methylation analysis
-setwd(speciesDir("human"))
+setwd("../meth/human2")
 dmAnalysis("cpgSite/bwameth_SRR6373923_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR6825466_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR6825471_depth10_CpGofDSS.txt",
            "cpgSite/bwameth_SRR6818517_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR6373926_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR6373932_depth10_CpGofDSS.txt",
            "dssRes2/bwameth_depth10_DML.txt","dssRes2/bwameth_depth10_DMR.txt")
@@ -44,7 +33,7 @@ dmAnalysis("cpgSite/walt_SRR6373923_depth10_CpGofDSS.txt","cpgSite/walt_SRR68254
            "dssRes2/walt_depth10_DML.txt","dssRes2/walt_depth10_DMR.txt")
 
 ## cattle: Differential methylation analysis
-setwd(speciesDir("cattle"))
+setwd("../meth/cattle2")
 dmAnalysis("cpgSite/bwameth_SRR7528450_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR7528456_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR7528458_depth10_CpGofDSS.txt",
            "cpgSite/bwameth_SRR7528459_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR7528464_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR7528465_depth10_CpGofDSS.txt",
            "dssRes2/bwameth_depth10_DML.txt","dssRes2/bwameth_depth10_DMR.txt")
@@ -59,7 +48,7 @@ dmAnalysis("cpgSite/walt_SRR7528450_depth10_CpGofDSS.txt","cpgSite/walt_SRR75284
            "dssRes2/walt_depth10_DML.txt","dssRes2/walt_depth10_DMR.txt")
 
 ## pig: Differential methylation analysis
-setwd(speciesDir("pig"))
+setwd("../meth/pig2")
 dmAnalysis("cpgSite/bwameth_SRR7812176_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR7812178_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR7812179_depth10_CpGofDSS.txt",
            "cpgSite/bwameth_SRR7812199_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR7812200_depth10_CpGofDSS.txt","cpgSite/bwameth_SRR7812210_depth10_CpGofDSS.txt",
            "dssRes2/bwameth_depth10_DML.txt","dssRes2/bwameth_depth10_DMR.txt")

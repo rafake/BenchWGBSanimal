@@ -1,17 +1,11 @@
-#!/usr/bin/env bash
-# Configurable local paths; override via env vars if needed.
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-indexDir="${INDEX_DIR:-${REPO_DIR}/index}"
-softDir="${SOFT_DIR:-${REPO_DIR}/soft}"
-PYTHON_BIN="${PYTHON_BIN:-python3}"
-PYTHON3_BIN="${PYTHON3_BIN:-python3}"
-
+#!/bin/sh
+indexDir=../index
+softDir=../soft
 
 speciesList=(human cattle pig)
 genomeList=(hg38 bosTau9 susScr11)
 
-for i in "${!speciesList[@]}"
+for i in $(seq 0 3)
 do
 	MAPPERLIST=(bismarkbwt2 bismarkhis2 bsmap bwameth walt batmeth2 bsseeker2bt bsseeker2bt2 bsseeker2soap hisat_3n hisat_3n_repeat bsbolt abismal)
 	#creat folder of index
@@ -46,21 +40,21 @@ do
 
 	echo "generate bsseeker2bt index"
 	LD_PRELOAD=${softDir}/glibc-2.14/lib/libc-2.14.so \
-	${PYTHON_BIN} ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-build.py \
+	python ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-build.py \
       -f ${indexDir}/${speciesList[$i]}/bsseeker2bt/${genomeList[$i]}.fa \
       --aligner=bowtie \
       -p ${softDir}/bowtie-1.3.0-linux-x86_64 \
       -d ${indexDir}/${speciesList[$i]}/bsseeker2bt
       
 	echo "generate bsseeker2bt2 index"
-	${PYTHON_BIN} ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-build.py \
+	python ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-build.py \
       -f ${indexDir}/${speciesList[$i]}/bsseeker2bt2/${genomeList[$i]}.fa \
       --aligner=bowtie2 \
       -p ${softDir}/bowtie2-2.3.4.3-linux-x86_64 \
       -d ${indexDir}/${speciesList[$i]}/bsseeker2bt2
       
 	echo "generate bsseeker2soap index"
-	${PYTHON_BIN} ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-build.py \
+	python ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-build.py \
       -f ${indexDir}/${speciesList[$i]}/bsseeker2soap/${genomeList[$i]}.fa  \
       --aligner=soap \
       -p ${softDir}/soap/2.21 \
@@ -69,17 +63,17 @@ do
   echo "generate hisat_3n index"    
   ${softDir}/hisat-3n/hisat-3n-build \
       --base-change C,T \
-      ${indexDir}/${speciesList[$i]}/hisat_3n/${genomeList[$i]}.fa \
-      ${indexDir}/${speciesList[$i]}/hisat_3n/${genomeList[$i]}
+      ${indexDir}/${speciesList[$i]}/hista_3n/${genomeList[$i]}.fa \
+      ${indexDir}/${speciesList[$i]}/hista_3n/${genomeList[$i]}
   
   echo "generate hisat_3n_repeat index"
   ${softDir}/hisat-3n/hisat-3n-build \
       --base-change T,C \
-      --repeat-index ${indexDir}/${speciesList[$i]}/hisat_3n_repeat/${genomeList[$i]}.fa \
-      ${indexDir}/${speciesList[$i]}/hisat_3n_repeat/${genomeList[$i]}
+      --repeat-index ${indexDir}/${speciesList[$i]}/hista_3n_repeat/${genomeList[$i]}.fa \
+      ${indexDir}/${speciesList[$i]}/hista_3n_repeat/${genomeList[$i]}
   
   echo "generate bsbolt index"
-  ${PYTHON3_BIN} -m bsbolt \
+  python3 -m bsbolt \
       Index -G ${indexDir}/${speciesList[$i]}/bsbolt/${genomeList[$i]}.fa \
       -DB ${indexDir}/${speciesList[$i]}/bsbolt/
   

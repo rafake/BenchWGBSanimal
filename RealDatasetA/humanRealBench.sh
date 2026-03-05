@@ -1,15 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-# Configurable local paths; override via env vars if needed.
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-indexDir="${INDEX_DIR:-${REPO_DIR}/index}"
-softDir="${SOFT_DIR:-${REPO_DIR}/soft}"
-realDataDir="${DATA_DIR:-${REPO_DIR}/data}"
-resultDir="${RESULT_DIR:-${REPO_DIR}/result/realBench}"
-realDataUniMapScript="${REALDATA_UNIMAP_SCRIPT:-${SCRIPT_DIR}/RealDataUniMap.py}"
-PYTHON_BIN="${PYTHON_BIN:-python3}"
-
+indexDir=../index
+softDir=../soft
+realDataDir=../data
+resultDir=../result/realBench
 
 MAPPERLIST=(bismarkbwt2 bismarkhis2 bsmap bwameth walt batmeth2 bsseeker2bt bsseeker2bt2end bsseeker2bt2loc bsseeker2soap hisat_3n hisat_3n_repeat bsbolt abismal) 
 genome=hg38
@@ -17,7 +11,6 @@ species=human
 readLen=150
 
 sampleList=(SRR6818517 SRR6373926 SRR6373932)
-if [[ -n "${SAMPLE_LIST:-}" ]]; then read -r -a sampleList <<< "${SAMPLE_LIST}"; fi
 
 
 echo "map reads to ref genome using walt"
@@ -33,7 +26,7 @@ do
 			-1 ${realDataDir}/${species}/seedReadLen/${sample}_clean_readLen150_1.fastq \
 			-2 ${realDataDir}/${species}/seedReadLen/${sample}_clean_readLen150_2.fastq \
 			-o ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -64,7 +57,7 @@ do
 			${realDataDir}/${species}/seedReadLen/${sample}_clean_readLen150_2.fastq \
 			-t 1 \
 			> ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -99,7 +92,7 @@ do
 			-o ${resultDir}/${species}/${sample}/${mapper}
 		mv ${resultDir}/${species}/${sample}/${mapper}/${sample}_clean_readLen150_1_bismark_bt2_pe.sam \
 			${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -129,7 +122,7 @@ do
 			-b ${realDataDir}/${species}/seedReadLen/${sample}_clean_readLen150_2.fastq \
 			-p 1 \
 			-o ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -165,7 +158,7 @@ do
 		${resultDir}/${species}/${sample}/${mapper}/
 	mv realDataSample${sample}.run.log \
 		${resultDir}/${species}/${sample}/${mapper}/
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -200,7 +193,7 @@ do
 		-o ${resultDir}/${species}/${sample}/${mapper}
 	mv ${resultDir}/${species}/${sample}/${mapper}/${sample}_clean_readLen150_1_bismark_hisat2_pe.sam \
 		${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam		
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -225,7 +218,7 @@ for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
 	echo -e "mem\tRSS\trealTime\tcpusysTime\tcpuuserTime" >	${resultDir}/${species}/${sample}/${mapper}/Bench.csv
-	LD_PRELOAD=${softDir}/glibc-2.14/lib/libc-2.14.so \
+	LD_PRELOAD=/share/nas2/USER_DIR/wenping/soft/glibc-2.14/lib/libc-2.14.so \
 	/usr/bin/time -f "%K\t%M\t%E\t%S\t%U" -o ${resultDir}/${species}/${sample}/${mapper}/Bench.csv -a \
 	python ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py \
 		-1 ${realDataDir}/${species}/seedReadLen/${sample}_clean_readLen150_1.fastq \
@@ -238,7 +231,7 @@ do
 		-p ${softDir}/bowtie-1.3.0-linux-x86_64 \
 		--temp_dir=${resultDir}/${species}/${sample}/${mapper}/ \
 		-o ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -276,7 +269,7 @@ do
 		-p ${softDir}/bowtie2-2.3.4.3-linux-x86_64 \
 		--temp_dir=${resultDir}/${species}/${sample}/${mapper}/ \
 		-o ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -312,7 +305,7 @@ do
 		-p ${softDir}/bowtie2-2.3.4.3-linux-x86_64 \
 		--temp_dir=${resultDir}/${species}/${sample}/${mapper}/ \
 		-o ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -346,10 +339,10 @@ do
 		--soap-p 1 \
 		--soap-r 1 \
 		--aligner=soap \
-		-p ${softDir}/soap/2.21 \
+		-p /share/nas2/genome/biosoft/soap/2.21 \
 		--temp_dir=${resultDir}/${species}/${sample}/${mapper}/ \
 		-o ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -381,7 +374,7 @@ do
 		-p 1 \
 		--directional-mapping \
 		--base-change C,T
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -414,7 +407,7 @@ do
 		--directional-mapping \
 		--base-change C,T \
 		--repeat
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -439,7 +432,7 @@ do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
 	echo -e "mem\tRSS\trealTime\tcpusysTime\tcpuuserTime" >	${resultDir}/${species}/${sample}/${mapper}/Bench.csv
 	/usr/bin/time -f "%K\t%M\t%E\t%S\t%U" -o ${resultDir}/${species}/${sample}/${mapper}/Bench.csv -a \
-	${PYTHON_BIN} -m bsbolt Align \
+	python -m bsbolt Align \
 		-F1 ${realDataDir}/${species}/seedReadLen/${sample}_clean_readLen150_1.fastq \
 		-F2 ${realDataDir}/${species}/seedReadLen/${sample}_clean_readLen150_2.fastq \
 		-DB ${indexDir}/${species}/${mapper}/ \
@@ -448,7 +441,7 @@ do
 	${softDir}/samtools-1.12/bin/samtools view -h -@ 3 \
 		${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.bam \
 		-o ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
@@ -479,7 +472,7 @@ do
 		${realDataDir}/${species}/seedReadLen/${sample}_clean_readLen150_1.fastq \
 		${realDataDir}/${species}/seedReadLen/${sample}_clean_readLen150_2.fastq \
 		-t 1
-	${PYTHON_BIN} ${realDataUniMapScript} \
+	python /share/nas2/USER_DIR/wenping/gwentao/my_script/RealDataUniMap.py \
 		-i ${resultDir}/${species}/${sample}/${mapper}/realDataSample${sample}.sam \
 		-t ${mapper} \
 		-s ${species} \
