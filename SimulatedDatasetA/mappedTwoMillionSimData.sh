@@ -1,16 +1,22 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-indexDir=../index
-simudataDir=../data/simudate
-softDir=../soft
-resultDir=../result/bench
-scriptDir=../my_script
+# Configurable local paths; override via env vars if needed.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+indexDir="${INDEX_DIR:-${REPO_DIR}/index}"
+simudataDir="${SIM_DATA_DIR:-${REPO_DIR}/data/simudate}"
+softDir="${SOFT_DIR:-${REPO_DIR}/soft}"
+resultDir="${RESULT_DIR:-${REPO_DIR}/result/bench}"
+scriptDir="${SCRIPT_HELPER_DIR:-${SCRIPT_DIR}}"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+PYTHON3_BIN="${PYTHON3_BIN:-python3}"
+
 
 
 speciesList=(human cattle pig)
 genomeList=(hg38 bosTau9 susScr11)
 
-for i in $(seq 0 3)
+for i in "${!speciesList[@]}"
 do
 	MAPPERLIST=(bismarkbwt2 bismarkhis2 bsmap bwameth walt batmeth2 bsseeker2bt bsseeker2bt2end bsseeker2bt2loc bsseeker2soap hisat_3n hisat_3n_repeat bsbolt abismal) 
 	ERRORRATE=(0 0.25 0.5 0.75 1)
@@ -32,7 +38,7 @@ do
 				-1 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_1.fastq \
 				-2 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_2.fastq \
 				-o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam          
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -64,7 +70,7 @@ do
 				${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/
 			mv ./simulatedErrRates${errorRate//./}Num${Num}.run.log \
 				${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/	          
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -91,7 +97,7 @@ do
 				${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_2.fastq \
 				-t 1 \
 				> ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -121,7 +127,7 @@ do
 				-o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}
 			mv ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}_1_bismark_bt2_pe.sam \
 				${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -151,7 +157,7 @@ do
 				-o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper} 
 			mv ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}_1_bismark_hisat2_pe.sam \
 				${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam		
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -174,7 +180,7 @@ do
 			echo -e "mem\tRSS\trealTime\tcpusysTime\tcpuuserTime" >	${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/Bench.csv
 			LD_PRELOAD=${softDir}/glibc-2.14/lib/libc-2.14.so \
 			/usr/bin/time -f "%K\t%M\t%E\t%S\t%U" -o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/Bench.csv -a \
-			python ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py \
+			${PYTHON_BIN} ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py \
 				-1 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_1.fastq \
 				-2 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_2.fastq \
 				-g ${genomeList[$i]}.fa \
@@ -185,7 +191,7 @@ do
 				-p ${softDir}/bowtie-1.3.0-linux-x86_64 \
 				--temp_dir=${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/ \
 				-o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -207,7 +213,7 @@ do
 			mkdir -p ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}
 			echo -e "mem\tRSS\trealTime\tcpusysTime\tcpuuserTime" >	${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/Bench.csv
 			/usr/bin/time -f "%K\t%M\t%E\t%S\t%U" -o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/Bench.csv -a \
-			python ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py \
+			${PYTHON_BIN} ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py \
 				-1 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_1.fastq \
 				-2 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_2.fastq \
 				-g ${genomeList[$i]}.fa \
@@ -219,7 +225,7 @@ do
 				-p ${softDir}/bowtie2-2.3.4.3-linux-x86_64 \
 				--temp_dir=${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/ \
 				-o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -240,7 +246,7 @@ do
 			mkdir -p ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}
 			echo -e "mem\tRSS\trealTime\tcpusysTime\tcpuuserTime" >	${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/Bench.csv
 			/usr/bin/time -f "%K\t%M\t%E\t%S\t%U" -o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/Bench.csv -a \
-			python ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py \
+			${PYTHON_BIN} ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py \
 				-1 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_1.fastq \
 				-2 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_2.fastq \
 				-g ${genomeList[$i]}.fa \
@@ -251,7 +257,7 @@ do
 				-p ${softDir}/bowtie2-2.3.4.3-linux-x86_64 \
 				--temp_dir=${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/ \
 				-o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -272,7 +278,7 @@ do
 			mkdir -p ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}
 			echo -e "mem\tRSS\trealTime\tcpusysTime\tcpuuserTime" >	${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/Bench.csv
 			/usr/bin/time -f "%K\t%M\t%E\t%S\t%U" -o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/Bench.csv -a \
-			python ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py \
+			${PYTHON_BIN} ${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py \
 				-1 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_1.fastq \
 				-2 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_2.fastq \
 				-g ${genomeList[$i]}.fa \
@@ -284,7 +290,7 @@ do
 				-p ${softDir}/soap/2.21 \
 				--temp_dir=${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/ \
 				-o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -310,7 +316,7 @@ do
 				-b ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_2.fastq \
 				-p 1 \
 				-o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam  	
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -338,7 +344,7 @@ do
 				-p 1 \
 				--directional-mapping \
 				--base-change C,T			
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -367,7 +373,7 @@ do
 				--directional-mapping \
 				--base-change C,T \
 				--repeat
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -388,7 +394,7 @@ do
 			mkdir -p ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}
 			echo -e "mem\tRSS\trealTime\tcpusysTime\tcpuuserTime" >	${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/Bench.csv
 			/usr/bin/time -f "%K\t%M\t%E\t%S\t%U" -o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/Bench.csv -a \
-			python3 -m bsbolt Align \
+			${PYTHON3_BIN} -m bsbolt Align \
 				-F1 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_1.fastq \
 				-F2 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_2.fastq \
 				-DB ${indexDir}/${speciesList[$i]}/${mapper}/ \
@@ -396,7 +402,7 @@ do
 				-t 1
 			samtools view -h ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.bam \
 				-o ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -423,7 +429,7 @@ do
 				${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_1.fastq \
 				${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}_2.fastq \
 				-t 1
-			python ${scriptDir}/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${scriptDir}/SimuDataAccuUni.py \
 				-i ${resultDir}/${speciesList[$i]}/simulatedErrRates${errorRate//./}Num${Num}/${mapper}/simulatedErrRates${errorRate//./}Num${Num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \

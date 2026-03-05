@@ -1,0 +1,15 @@
+name: benchwgbs-map-x64
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - pip
+  - samtools
+  - methyldackel
+  - bedtools
+  - autoconf
+  - automake
+  - libtool
+  - make
+  - pkg-config

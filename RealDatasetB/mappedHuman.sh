@@ -1,17 +1,55 @@
-#!/bin/sh
-indexDir=../index
-softDir=../soft
-realDataDir=../data
-resultDir=../result/realRes
-script=../my_script/realRes
-dataPath=../data
+#!/usr/bin/env bash
+# Configurable local paths; override via env vars if needed.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+indexDir="${INDEX_DIR:-${REPO_DIR}/index}"
+softDir="${SOFT_DIR:-${REPO_DIR}/soft}"
+realDataDir="${DATA_DIR:-${REPO_DIR}/data}"
+resultDir="${RESULT_DIR:-${REPO_DIR}/result/realRes}"
+script="${SCRIPT_HELPER_DIR:-${SCRIPT_DIR}}"
+dataPath="${DATA_DIR:-${REPO_DIR}/data}"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+PYTHON3_BIN="${PYTHON3_BIN:-python3}"
+
+if [[ -z "${SAMTOOLS_BIN:-}" ]]; then
+	if command -v samtools >/dev/null 2>&1; then
+		SAMTOOLS_BIN="$(command -v samtools)"
+	else
+		SAMTOOLS_BIN="${softDir}/samtools-1.12/samtools"
+	fi
+fi
+
+if [[ -z "${METHYLDACKEL_BIN:-}" ]]; then
+	if command -v MethylDackel >/dev/null 2>&1; then
+		METHYLDACKEL_BIN="$(command -v MethylDackel)"
+	else
+		METHYLDACKEL_BIN="${softDir}/MethylDackel"
+	fi
+fi
+
 
 genome=hg38
 species=human
 genomeLen=3209286105
 
 sampleList=(SRR6373923 SRR6825466 SRR6825471 SRR6818517 SRR6373926 SRR6373932)
+if [[ -n "${SAMPLE_LIST:-}" ]]; then read -r -a sampleList <<< "${SAMPLE_LIST}"; fi
 
+mapper_enabled() {
+	local candidate="$1"
+	if [[ -z "${MAPPER_LIST:-}" ]]; then
+		return 0
+	fi
+	for selected in ${MAPPER_LIST}; do
+		if [[ "${selected}" == "${candidate}" ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+if mapper_enabled "walt"; then
 echo "map reads to ref genome using walt"
 mapper=walt
 for sample in "${sampleList[@]}"
@@ -27,14 +65,17 @@ do
          -u
 	samtools view -b -@ 8 ${resultDir}/${species}/${sample}/${mapper}/${sample}.sam -o ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam
 	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}.sam
-	${softDir}/samtools-1.12/samtools sort -@ 10 ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam -o ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
-	${softDir}/samtools-1.12/samtools index ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
+	${SAMTOOLS_BIN} sort -@ 10 ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam -o ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
+	${SAMTOOLS_BIN} index ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
 	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam
-	${softDir}/MethylDackel extract -@ 8 ${indexDir}/${species}/${genome}.fa ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam -o ${resultDir}/${species}/${mapper}_${sample}
-	python ${script}/prepareDSSinput.py -i ${resultDir}/${species}/${mapper}_${sample}_CpG.bedGraph -o ${resultDir}/${species}/${mapper}_${sample}_CpGofDSS.txt
+	${METHYLDACKEL_BIN} extract -@ 8 ${indexDir}/${species}/${genome}.fa ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam -o ${resultDir}/${species}/${mapper}_${sample}
+	${PYTHON_BIN} ${script}/prepareDSSinput.py -i ${resultDir}/${species}/${mapper}_${sample}_CpG.bedGraph -o ${resultDir}/${species}/${mapper}_${sample}_CpGofDSS.txt
 	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
 done
 
+fi
+
+if mapper_enabled "bwameth"; then
 echo "map reads to ref genome using bwameth"
 mapper=bwameth
 for sample in "${sampleList[@]}"
@@ -47,14 +88,17 @@ do
        -t 8 \
        | samtools view -b - > \
        ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam
-  ${softDir}/samtools-1.12/samtools sort -@ 10 ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam -o ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
-	${softDir}/samtools-1.12/samtools index ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
+  ${SAMTOOLS_BIN} sort -@ 10 ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam -o ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
+	${SAMTOOLS_BIN} index ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
 	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam
-	${softDir}/MethylDackel extract -@ 8 ${indexDir}/${species}/${genome}.fa ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam -o ${resultDir}/${species}/${mapper}_${sample}
-	python ${script}/prepareDSSinput.py -i ${resultDir}/${species}/${mapper}_${sample}_CpG.bedGraph -o ${resultDir}/${species}/${mapper}_${sample}_CpGofDSS.txt
+	${METHYLDACKEL_BIN} extract -@ 8 ${indexDir}/${species}/${genome}.fa ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam -o ${resultDir}/${species}/${mapper}_${sample}
+	${PYTHON_BIN} ${script}/prepareDSSinput.py -i ${resultDir}/${species}/${mapper}_${sample}_CpG.bedGraph -o ${resultDir}/${species}/${mapper}_${sample}_CpGofDSS.txt
 	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
 done
 
+fi
+
+if mapper_enabled "bismarkbwt2"; then
 echo "map reads to ref genome using bismarkbwt2"
 mapper=bismarkbwt2
 for sample in "${sampleList[@]}"
@@ -68,14 +112,17 @@ do
 				--temp_dir ${resultDir}/${species}/${sample}/${mapper}/temp \
         -o ${resultDir}/${species}/${sample}/${mapper}
   mv ${resultDir}/${species}/${sample}/${mapper}/${sample}_clean_1_bismark_bt2_pe.bam ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam
-  ${softDir}/samtools-1.12/samtools sort -@ 10 ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam -o ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
-	${softDir}/samtools-1.12/samtools index ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
+  ${SAMTOOLS_BIN} sort -@ 10 ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam -o ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
+	${SAMTOOLS_BIN} index ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
 	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam
-	${softDir}/MethylDackel extract -@ 8 ${indexDir}/${species}/${genome}.fa ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam -o ${resultDir}/${species}/${mapper}_${sample}
-	python ${script}/prepareDSSinput.py -i ${resultDir}/${species}/${mapper}_${sample}_CpG.bedGraph -o ${resultDir}/${species}/${mapper}_${sample}_CpGofDSS.txt
+	${METHYLDACKEL_BIN} extract -@ 8 ${indexDir}/${species}/${genome}.fa ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam -o ${resultDir}/${species}/${mapper}_${sample}
+	${PYTHON_BIN} ${script}/prepareDSSinput.py -i ${resultDir}/${species}/${mapper}_${sample}_CpG.bedGraph -o ${resultDir}/${species}/${mapper}_${sample}_CpGofDSS.txt
 	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
 done
 
+fi
+
+if mapper_enabled "bsmap"; then
 echo "map reads to ref genome using bsmap"
 mapper=bsmap
 for sample in "${sampleList[@]}"
@@ -86,32 +133,33 @@ do
        -b ${realDataDir}/${species}/${sample}/cleandata/${sample}_clean_2.fastq \
        -p 8 \
        -o ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam
-  ${softDir}/samtools-1.12/samtools sort -@ 10 ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam -o ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
-	${softDir}/samtools-1.12/samtools index ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
+  ${SAMTOOLS_BIN} sort -@ 10 ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam -o ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
+	${SAMTOOLS_BIN} index ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
 	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam
-	${softDir}/MethylDackel extract -@ 8 ${indexDir}/${species}/${genome}.fa ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam -o ${resultDir}/${species}/${mapper}_${sample}
-	python ${script}/prepareDSSinput.py -i ${resultDir}/${species}/${mapper}_${sample}_CpG.bedGraph -o ${resultDir}/${species}/${mapper}_${sample}_CpGofDSS.txt
+	${METHYLDACKEL_BIN} extract -@ 8 ${indexDir}/${species}/${genome}.fa ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam -o ${resultDir}/${species}/${mapper}_${sample}
+	${PYTHON_BIN} ${script}/prepareDSSinput.py -i ${resultDir}/${species}/${mapper}_${sample}_CpG.bedGraph -o ${resultDir}/${species}/${mapper}_${sample}_CpGofDSS.txt
 	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
 done
 
+fi
+
+if mapper_enabled "bsbolt"; then
 echo "map reads to ref genome using bsbolt"
-mapper=bsmap
+mapper=bsbolt
 for sample in "${sampleList[@]}"
 do
-	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
-	python3 -m bsbolt Align \
-       -DB ${indexDir}/${species}/${mapper}/ \
-       -F1 ${realDataDir}/${species}/${sample}/cleandata/${sample}_clean_1.fastq.gz \
-       -F2 ${realDataDir}/${species}/${sample}/cleandata/${sample}_clean_2.fastq.gz \
-       -O ${resultDir}/${species}/${sample}/${mapper}/${sample} \
+	mkdir -p "${resultDir}/${species}/${sample}/${mapper}"
+	"${PYTHON3_BIN}" -m bsbolt Align \
+       -DB "${indexDir}/${species}/${mapper}/" \
+       -F1 "${realDataDir}/${species}/${sample}/cleandata/${sample}_clean_1.fastq.gz" \
+       -F2 "${realDataDir}/${species}/${sample}/cleandata/${sample}_clean_2.fastq.gz" \
+       -O "${resultDir}/${species}/${sample}/${mapper}/${sample}" \
        -t 8
-  ${softDir}/samtools-1.12/samtools sort -@ 10 ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam -o ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
-	${softDir}/samtools-1.12/samtools index ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
-	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}.bam
-	${softDir}/MethylDackel extract -@ 8 ${indexDir}/${species}/${genome}.fa ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam -o ${resultDir}/${species}/${mapper}_${sample}
-	python ${script}/prepareDSSinput.py -i ${resultDir}/${species}/${mapper}_${sample}_CpG.bedGraph -o ${resultDir}/${species}/${mapper}_${sample}_CpGofDSS.txt
-	rm ${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam
+  "${SAMTOOLS_BIN}" sort -@ 10 "${resultDir}/${species}/${sample}/${mapper}/${sample}.bam" -o "${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam"
+	"${SAMTOOLS_BIN}" index "${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam"
+	rm "${resultDir}/${species}/${sample}/${mapper}/${sample}.bam"
+	"${METHYLDACKEL_BIN}" extract -@ 8 "${indexDir}/${species}/${genome}.fa" "${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam" -o "${resultDir}/${species}/${mapper}_${sample}"
+	"${PYTHON_BIN}" "${script}/prepareDSSinput.py" -i "${resultDir}/${species}/${mapper}_${sample}_CpG.bedGraph" -o "${resultDir}/${species}/${mapper}_${sample}_CpGofDSS.txt"
+	rm "${resultDir}/${species}/${sample}/${mapper}/${sample}_sort.bam"
 done
-
-
-
+fi

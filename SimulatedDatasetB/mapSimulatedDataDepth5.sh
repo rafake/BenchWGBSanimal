@@ -1,9 +1,16 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-indexDir=../index
-simudataDir=../data/simudate/depth5
-softDir=../soft
-resultDir=../result/depth5
+# Configurable local paths; override via env vars if needed.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+indexDir="${INDEX_DIR:-${REPO_DIR}/index}"
+simudataDir="${SIM_DATA_DIR:-${REPO_DIR}/data/simudate/depth5}"
+softDir="${SOFT_DIR:-${REPO_DIR}/soft}"
+resultDir="${RESULT_DIR:-${REPO_DIR}/result/depth5}"
+simuDataAccuScript="${SIMU_ACCU_SCRIPT:-${REPO_DIR}/SimulatedDatasetA/SimuDataAccuUni.py}"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+PYTHON3_BIN="${PYTHON3_BIN:-python3}"
+
 
 
 speciesList=(human cattle pig)
@@ -12,9 +19,9 @@ errorRateList=(0 1)
 numList=(1 2 3)
 
 
-for i in $(seq 0 3)
+for i in "${!speciesList[@]}"
 do
-	for errorRate in "${errorRateList[@}"
+	for errorRate in "${errorRateList[@]}"
 	do
 		echo "map reads to ref genome using bwameth"
 		mapper=bwameth
@@ -27,7 +34,7 @@ do
 				${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate}Depth5Num${num}_2.fastq \
 				-t 8 \
 				> ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
-			python /share/nas2/USER_DIR/wenping/gwentao/my_script/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${simuDataAccuScript} \
 				-i ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -49,7 +56,7 @@ do
 				-b ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate}Depth5Num${num}_2.fastq \
 				-p 8 \
 				-o ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
-			python /share/nas2/USER_DIR/wenping/gwentao/my_script/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${simuDataAccuScript} \
 				-i ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -73,7 +80,7 @@ do
 				-1 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate}Depth5Num${num}_1.fastq \
 				-2 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate}Depth5Num${num}_2.fastq \
 				-o ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
-			python /share/nas2/USER_DIR/wenping/gwentao/my_script/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${simuDataAccuScript} \
 				-i ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -97,11 +104,11 @@ do
 				-2 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate}Depth5Num${num}_2.fastq \
 				--sam \
 				--ambiguous \
-				${resultDir}/${speciesList[$i]}${num}/${mapper}/temp \
+				--temp_dir ${resultDir}/${speciesList[$i]}${num}/${mapper}/temp \
 				-o ${resultDir}/${speciesList[$i]}${num}/${mapper}
 			mv ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}_1_bismark_bt2_pe.sam \
 				${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
-			python /share/nas2/USER_DIR/wenping/gwentao/my_script/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${simuDataAccuScript} \
 				-i ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \
@@ -111,22 +118,23 @@ do
 				-o ${resultDir}/${speciesList[$i]}${num}/${mapper}/SimuDataAccuUni${errorRate}.csv
 			samtools view -b -@ 3 ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam -o ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.bam
 			rm ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
-		
-		echo "map reads to ref genome using bsbolt"
-		mapper=bsbolt
+		done
+
+			echo "map reads to ref genome using bsbolt"
+			mapper=bsbolt
 		for num in "${numList[@]}"
 		do
 			mkdir -p ${resultDir}/${speciesList[$i]}${num}/${mapper}
-			python3 -m bsbolt Align \
+			${PYTHON3_BIN} -m bsbolt Align \
 				-F1 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate}Depth5Num${num}_1.fastq \
 				-F2 ${simudataDir}/${speciesList[$i]}/simulatedErrRates${errorRate}Depth5Num${num}_2.fastq \
-				-DB ${indexDir}/${species}/${mapper}/ \
-				-O ${resultDir}/${species}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num} \
+				-DB ${indexDir}/${speciesList[$i]}/${mapper}/ \
+				-O ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num} \
 				-t 8
 			${softDir}/samtools-1.12/bin/samtools view -h -@ 4 \
-				${resultDir}/${species}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.bam \
+				${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.bam \
 				-o ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
-			python /share/nas2/USER_DIR/wenping/gwentao/my_script/SimuDataAccuUni.py \
+			${PYTHON_BIN} ${simuDataAccuScript} \
 				-i ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam \
 				-t ${mapper} \
 				-s ${speciesList[$i]} \

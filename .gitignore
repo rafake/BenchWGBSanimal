@@ -1,0 +1,8 @@
+# Local/generated run artifacts
+data/
+index/
+result/
+logs/
+
+# macOS noise
+.DS_Store

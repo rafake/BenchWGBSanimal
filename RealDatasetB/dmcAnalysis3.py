@@ -220,12 +220,12 @@ bDiffDmcAnnoResCGI=outPath+"/"+bFileName+"_DiffDmcAnnoResCGI.bed"
 cDiffDmcAnnoResCGI=outPath+"/"+cFileName+"_DiffDmcAnnoResCGI.bed"
 dDiffDmcAnnoResCGI=outPath+"/"+dFileName+"_DiffDmcAnnoResCGI.bed"
 
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(comDmcFileName,cgiAnnoFile,comDmcAnnoResCGI))
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(allNonComDmcFileName,cgiAnnoFile,allNonComDmAnnoResCGI))
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(aDiffDmcFileName,cgiAnnoFile,aDiffDmcAnnoResCGI))
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(bDiffDmcFileName,cgiAnnoFile,bDiffDmcAnnoResCGI))
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(cDiffDmcFileName,cgiAnnoFile,cDiffDmcAnnoResCGI))
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(dDiffDmcFileName,cgiAnnoFile,dDiffDmcAnnoResCGI))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(comDmcFileName,cgiAnnoFile,comDmcAnnoResCGI))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(allNonComDmcFileName,cgiAnnoFile,allNonComDmAnnoResCGI))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(aDiffDmcFileName,cgiAnnoFile,aDiffDmcAnnoResCGI))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(bDiffDmcFileName,cgiAnnoFile,bDiffDmcAnnoResCGI))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(cDiffDmcFileName,cgiAnnoFile,cDiffDmcAnnoResCGI))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(dDiffDmcFileName,cgiAnnoFile,dDiffDmcAnnoResCGI))
 
 dmcAnnoResStaCGI=outPath+fileName+"dmcAnnoResStaCGI.txt"
 allResStaRep(comDmcAnnoResCGI,allNonComDmAnnoResCGI,aDiffDmcAnnoResCGI,bDiffDmcAnnoResCGI,cDiffDmcAnnoResCGI,dDiffDmcAnnoResCGI,resNumDict,dmcAnnoResStaCGI,"nonCgi","cgi")
@@ -245,12 +245,12 @@ bDiffDmcAnnoResRep=outPath+"/"+bFileName+"_DiffDmcAnnoResRep.bed"
 cDiffDmcAnnoResRep=outPath+"/"+cFileName+"_DiffDmcAnnoResRep.bed"
 dDiffDmcAnnoResRep=outPath+"/"+dFileName+"_DiffDmcAnnoResRep.bed"
 
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(comDmcFileName,repAnnoFile,comDmcAnnoResRep))
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(allNonComDmcFileName,repAnnoFile,allNonComDmAnnoResRep))
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(aDiffDmcFileName,repAnnoFile,aDiffDmcAnnoResRep))
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(bDiffDmcFileName,repAnnoFile,bDiffDmcAnnoResRep))
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(cDiffDmcFileName,repAnnoFile,cDiffDmcAnnoResRep))
-os.system('/project/pub/software/bedtools2-2.25.0/bin/bedtools intersect -a %s -b %s -wao > %s' %(dDiffDmcFileName,repAnnoFile,dDiffDmcAnnoResRep))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(comDmcFileName,repAnnoFile,comDmcAnnoResRep))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(allNonComDmcFileName,repAnnoFile,allNonComDmAnnoResRep))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(aDiffDmcFileName,repAnnoFile,aDiffDmcAnnoResRep))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(bDiffDmcFileName,repAnnoFile,bDiffDmcAnnoResRep))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(cDiffDmcFileName,repAnnoFile,cDiffDmcAnnoResRep))
+os.system('bedtools intersect -a %s -b %s -wao > %s' %(dDiffDmcFileName,repAnnoFile,dDiffDmcAnnoResRep))
 
 dmcAnnoResStaRep=outPath+fileName+"dmcAnnoResStaRep.txt"
 #cgiAndGeneAnnoResSta(comDmcAnnoResRep,allNonComDmAnnoResRep,aDiffDmcAnnoResRep,bDiffDmcAnnoResRep,cDiffDmcAnnoResRep,dDiffDmcAnnoResRep,dmcAnnoResStaRep,8)
