@@ -145,3 +145,4 @@ Rscript RealDatasetB/RealDatasetBPolt.R
 - R package errors: activate `benchwgbs-r-x64` and rerun `CHECK_SCOPE=r ./check_dependencies.sh`.
 - Python module `bsbolt` missing: activate `benchwgbs-map-x64` and run `python -m pip install --no-cache-dir bsbolt`.
 - If you run scripts from outside repo root, keep defaults by using absolute `RESULT_DIR`, `SOFT_DIR`, etc.
+- Minimal full-run mode: selected scripts now auto-skip unavailable mappers/tools instead of hard-failing. Skip reasons are written to `logs/*_skip_*.log`.

@@ -11,6 +11,27 @@ script="${SCRIPT_HELPER_DIR:-${SCRIPT_DIR}}"
 dataPath="${DATA_DIR:-${REPO_DIR}/data}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 PYTHON3_BIN="${PYTHON3_BIN:-python3}"
+LOG_DIR="${LOG_DIR:-${REPO_DIR}/logs}"
+mkdir -p "${LOG_DIR}"
+SKIP_LOG="${SKIP_LOG:-${LOG_DIR}/mappedHuman_skip_$(date +%Y%m%d_%H%M%S).log}"
+
+log_skip() {
+	local mapper="$1"
+	local reason="$2"
+	echo "[SKIP] ${mapper}: ${reason}" | tee -a "${SKIP_LOG}"
+}
+
+mapper_runtime_available() {
+	local mapper="$1"
+	case "${mapper}" in
+		walt) [[ -x "${softDir}/walt-master/bin/walt" ]] ;;
+		bwameth) [[ -f "${softDir}/bwa-meth-master/bwameth.py" ]] ;;
+		bismarkbwt2) [[ -x "${softDir}/Bismark-0.22.3/bismark" ]] && [[ -x "${softDir}/bowtie2-2.3.5.1-linux-x86_64/bowtie2" ]] ;;
+		bsmap) [[ -x "${softDir}/bsmap-2.90/bsmap" ]] ;;
+		bsbolt) "${PYTHON3_BIN}" -c "import bsbolt" >/dev/null 2>&1 ;;
+		*) return 1 ;;
+	esac
+}
 
 if [[ -z "${SAMTOOLS_BIN:-}" ]]; then
 	if command -v samtools >/dev/null 2>&1; then
@@ -38,6 +59,10 @@ if [[ -n "${SAMPLE_LIST:-}" ]]; then read -r -a sampleList <<< "${SAMPLE_LIST}";
 
 mapper_enabled() {
 	local candidate="$1"
+	if ! mapper_runtime_available "${candidate}"; then
+		log_skip "${candidate}" "required tool(s) missing under PATH/SOFT_DIR"
+		return 1
+	fi
 	if [[ -z "${MAPPER_LIST:-}" ]]; then
 		return 0
 	fi

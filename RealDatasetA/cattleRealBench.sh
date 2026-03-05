@@ -9,6 +9,43 @@ realDataDir="${DATA_DIR:-${REPO_DIR}/data}"
 resultDir="${RESULT_DIR:-${REPO_DIR}/result/realBench}"
 realDataUniMapScript="${REALDATA_UNIMAP_SCRIPT:-${SCRIPT_DIR}/RealDataUniMap.py}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
+LOG_DIR="${LOG_DIR:-${REPO_DIR}/logs}"
+mkdir -p "${LOG_DIR}"
+SKIP_LOG="${SKIP_LOG:-${LOG_DIR}/cattleRealBench_skip_$(date +%Y%m%d_%H%M%S).log}"
+
+log_skip() {
+	local mapper="$1"
+	local reason="$2"
+	echo "[SKIP] ${mapper}: ${reason}" | tee -a "${SKIP_LOG}"
+}
+
+mapper_runtime_available() {
+	local mapper="$1"
+	case "${mapper}" in
+		walt) [[ -x "${softDir}/walt-master/bin/walt" ]] ;;
+		bwameth) [[ -f "${softDir}/bwa-meth-master/bwameth.py" ]] ;;
+		bismarkbwt2) [[ -x "${softDir}/Bismark-0.22.3/bismark" ]] && [[ -x "${softDir}/bowtie2-2.3.5.1-linux-x86_64/bowtie2" ]] ;;
+		bsmap) [[ -x "${softDir}/bsmap-2.90/bsmap" ]] ;;
+		batmeth2) [[ -x "${softDir}/BatMeth2/bin/BatMeth2" ]] ;;
+		bismarkhis2) [[ -x "${softDir}/Bismark-0.22.3/bismark" ]] && [[ -x "${softDir}/hisat2-2.1.0/hisat2" ]] ;;
+		bsseeker2bt) [[ -f "${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py" ]] && [[ -x "${softDir}/bowtie-1.3.0-linux-x86_64/bowtie" ]] ;;
+		bsseeker2bt2end|bsseeker2bt2loc) [[ -f "${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py" ]] && [[ -x "${softDir}/bowtie2-2.3.4.3-linux-x86_64/bowtie2" ]] ;;
+		bsseeker2soap) [[ -f "${softDir}/BSseeker2-BSseeker2-v2.1.8/bs_seeker2-align.py" ]] && [[ -x "${softDir}/soap/2.21" ]] ;;
+		hisat_3n|hisat_3n_repeat) [[ -x "${softDir}/hisat-3n/hisat-3n" ]] ;;
+		bsbolt) ${PYTHON_BIN} -c "import bsbolt" >/dev/null 2>&1 ;;
+		abismal) [[ -x "${softDir}/abismal-3.0.0/bin/abismal" ]] ;;
+		*) return 1 ;;
+	esac
+}
+
+mapper_enabled() {
+	local mapper="$1"
+	if ! mapper_runtime_available "${mapper}"; then
+		log_skip "${mapper}" "required tool(s) missing under PATH/SOFT_DIR"
+		return 1
+	fi
+	return 0
+}
 
 
 MAPPERLIST=(bismarkbwt2 bismarkhis2 bsmap bwameth walt batmeth2 bsseeker2bt bsseeker2bt2end bsseeker2bt2loc bsseeker2soap hisat_3n hisat_3n_repeat bsbolt abismal) 
@@ -22,6 +59,7 @@ if [[ -n "${SAMPLE_LIST:-}" ]]; then read -r -a sampleList <<< "${SAMPLE_LIST}";
 
 echo "map reads to ref genome using walt"
 mapper=walt
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -50,9 +88,11 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 echo "map reads to ref genome using bwameth"
 mapper=bwameth
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -81,10 +121,12 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 
 echo "map reads to ref genome using bismarkbwt2"
 mapper=bismarkbwt2
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -116,9 +158,11 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 echo "map reads to ref genome using bsmap"
 mapper=bsmap
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -146,9 +190,11 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 echo "map reads to ref genome using batmeth2"
 mapper=batmeth2
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -182,10 +228,12 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 
 echo "map reads to ref genome using bismarkhis2"
 mapper=bismarkhis2
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -217,10 +265,12 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 
 echo "map reads to ref genome using bsseeker2bt"
 mapper=bsseeker2bt
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -255,10 +305,12 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 
 echo "map reads to ref genome using bsseeker2bt2end"
 mapper=bsseeker2bt2end
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -293,9 +345,11 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 echo "map reads to ref genome using bsseeker2bt2loc"
 mapper=bsseeker2bt2loc
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -329,9 +383,11 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 echo "map reads to ref genome using bsseeker2soap"
 mapper=bsseeker2soap
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -366,9 +422,11 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 echo "map reads to ref genome using hisat_3n"
 mapper=hisat_3n
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -398,9 +456,11 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 echo "map reads to ref genome using hisat_3n_repeat"
 mapper=hisat_3n_repeat
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -431,9 +491,11 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 echo "map reads to ref genome using bsbolt"
 mapper=bsbolt
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -465,9 +527,11 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 echo "map reads to ref genome using abismal"
 mapper=abismal
+if mapper_enabled "$mapper"; then
 for sample in "${sampleList[@]}"
 do
 	mkdir -p ${resultDir}/${species}/${sample}/${mapper}
@@ -496,6 +560,7 @@ do
 		| sed -n 2p \
 		> ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv
 done
+fi
 
 echo -e "tool\tspecies\tdataName\tseedLen\treadLen\tcountMatchReads\tuniMapRate\tmem\tRSS\trealTime\tcpusysTime\tcpuuserTime" > ${resultDir}/${species}/${species}BenchRealDataUniMap.csv
 
@@ -503,7 +568,11 @@ for sample in "${sampleList[@]}"
 do
 	for mapper in "${MAPPERLIST[@]}"
 	do
-		cat ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv \
-		>> ${resultDir}/${species}/${species}BenchRealDataUniMap.csv
+		if [[ -f "${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv" ]]; then
+			cat "${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv" \
+			>> "${resultDir}/${species}/${species}BenchRealDataUniMap.csv"
+		else
+			log_skip "${mapper}" "missing ${resultDir}/${species}/${sample}/${mapper}/BenchRealDataUniMap.csv during combine"
+		fi
 	done
 done

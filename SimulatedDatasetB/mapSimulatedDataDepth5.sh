@@ -10,6 +10,27 @@ resultDir="${RESULT_DIR:-${REPO_DIR}/result/depth5}"
 simuDataAccuScript="${SIMU_ACCU_SCRIPT:-${REPO_DIR}/SimulatedDatasetA/SimuDataAccuUni.py}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 PYTHON3_BIN="${PYTHON3_BIN:-python3}"
+LOG_DIR="${LOG_DIR:-${REPO_DIR}/logs}"
+mkdir -p "${LOG_DIR}"
+SKIP_LOG="${SKIP_LOG:-${LOG_DIR}/mapSimulatedDataDepth5_skip_$(date +%Y%m%d_%H%M%S).log}"
+
+log_skip() {
+	local mapper="$1"
+	local reason="$2"
+	echo "[SKIP] ${mapper}: ${reason}" | tee -a "${SKIP_LOG}"
+}
+
+mapper_runtime_available() {
+	local mapper="$1"
+	case "${mapper}" in
+		bwameth) [[ -f "${softDir}/bwa-meth-master/bwameth.py" ]] ;;
+		bsmap) [[ -x "${softDir}/bsmap-2.90/bsmap" ]] ;;
+		walt) [[ -x "${softDir}/walt-master/bin/walt" ]] ;;
+		bismarkbwt2) [[ -x "${softDir}/Bismark-0.22.3/bismark" ]] && [[ -x "${softDir}/bowtie2-2.3.5.1-linux-x86_64/bowtie2" ]] ;;
+		bsbolt) "${PYTHON3_BIN}" -c "import bsbolt" >/dev/null 2>&1 ;;
+		*) return 1 ;;
+	esac
+}
 
 
 
@@ -25,6 +46,7 @@ do
 	do
 		echo "map reads to ref genome using bwameth"
 		mapper=bwameth
+		if mapper_runtime_available "${mapper}"; then
 		for num in "${numList[@]}"
 		do
 		mkdir -p ${resultDir}/${speciesList[$i]}${num}/${mapper}
@@ -45,9 +67,13 @@ do
 			samtools view -b -@ 8 ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam -o ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.bam
 			rm ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
 		done
+		else
+			log_skip "${mapper}" "required tool(s) missing under PATH/SOFT_DIR"
+		fi
 
 		echo "map reads to ref genome using bsmap"
 		mapper=bsmap
+		if mapper_runtime_available "${mapper}"; then
 		for num in "${numList[@]}"
 		do
 			mkdir -p ${resultDir}/${speciesList[$i]}${num}/${mapper}
@@ -67,9 +93,13 @@ do
 			samtools view -b -@ 8 ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam -o ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.bam
 			rm ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
 		done
+		else
+			log_skip "${mapper}" "required tool(s) missing under PATH/SOFT_DIR"
+		fi
 
 		echo "map reads to ref genome using walt"
 		mapper=walt
+		if mapper_runtime_available "${mapper}"; then
 		for num in "${numList[@]}"
 		do
 			mkdir -p ${resultDir}/${speciesList[$i]}${num}/${mapper}
@@ -91,10 +121,14 @@ do
 			samtools view -b -@ 8 ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam -o ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.bam
 			rm ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
 		done
+		else
+			log_skip "${mapper}" "required tool(s) missing under PATH/SOFT_DIR"
+		fi
 
 
 		echo "map reads to ref genome using bismarkbwt2"
 		mapper=bismarkbwt2
+		if mapper_runtime_available "${mapper}"; then
 		for num in "${numList[@]}"
 		do
 			mkdir -p ${resultDir}/${speciesList[$i]}${num}/${mapper}
@@ -119,9 +153,13 @@ do
 			samtools view -b -@ 3 ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam -o ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.bam
 			rm ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
 		done
+		else
+			log_skip "${mapper}" "required tool(s) missing under PATH/SOFT_DIR"
+		fi
 
 			echo "map reads to ref genome using bsbolt"
 			mapper=bsbolt
+		if mapper_runtime_available "${mapper}"; then
 		for num in "${numList[@]}"
 		do
 			mkdir -p ${resultDir}/${speciesList[$i]}${num}/${mapper}
@@ -144,5 +182,8 @@ do
 				-o ${resultDir}/${speciesList[$i]}${num}/${mapper}/SimuDataAccuUni${errorRate}.csv
 			rm ${resultDir}/${speciesList[$i]}${num}/${mapper}/simulatedErrRates${errorRate}Depth5Num${num}.sam
 		done
+		else
+			log_skip "${mapper}" "required tool(s) missing under PATH/SOFT_DIR"
+		fi
 	done
 done
